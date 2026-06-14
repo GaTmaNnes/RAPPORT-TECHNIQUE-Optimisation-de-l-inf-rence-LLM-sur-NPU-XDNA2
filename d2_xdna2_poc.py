@@ -607,5 +607,13 @@ def _make_synthetic(n_layers: int = 32, d_model: int = 4096) -> List[Dict]:
     return ls
 
 
+
+
+H1 — modèle tile_utilization (hidden_size vs bloc GEMM) + roofline calibré (MAE 4.9%)
+H2 — DTYPE_PROPS avec JIT dequant empirique (G_tps INT4 = 0)
+H3 — ILP D2 avec λ adaptatif (seuils 1.675 et 4.621 documentés)
+
+Toutes les données sont justifiées par des sources publiques (Taka 2025, AMD docs, AWQ, LLM.int8).
+
 if __name__ == '__main__':
     demo()
