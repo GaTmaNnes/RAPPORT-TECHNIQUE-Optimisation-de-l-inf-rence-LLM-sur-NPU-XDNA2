@@ -228,9 +228,6 @@ Ce KV overhead n'est pas comptabilisé dans le plan D2 actuel.
 
 ---
 
-### P5 — 4 vs 8 Colonnes AIE Actives
-
-**Problème :** empiriquement, seules 4 colonnes sur 8 semblent actives dans les kernels NPU actuels (inféré du ratio BW effective / BW théorique). La raison est une limitation firmware dans le driver.
 
 **Conséquence :** `BW_eff` réelle est ~30 GB/s (4 colonnes) vs ~55-60 GB/s théorique (8 colonnes). ( acer nitro 16v ia ) 
 Le tile_util calculé sur 8 colonnes est donc une approximation optimiste.
