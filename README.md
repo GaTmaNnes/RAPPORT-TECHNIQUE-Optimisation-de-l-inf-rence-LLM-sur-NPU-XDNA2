@@ -55,7 +55,7 @@ Ce PoC adapte D2 pour l'NPU AMD XDNA2, en intégrant trois découvertes critique
 
 **Sur XDNA2 :** le bottleneck principal est l'alignement des dimensions du modèle au bloc GEMM du compilateur AIE.
 
-Le compilateur AMD distribue `hidden_size` sur les 8 colonnes AIE (448 éléments par colonne). Chaque colonne traite ses éléments en blocs de taille `GEMM_BLOCK=256`. Si `hidden_size % (8 × GEMM_BLOCK) ≠ 0`, une fraction des tiles reste idle pendant chaque GEMM.
+.
 
 **Score de tile utilization :**
 ```
