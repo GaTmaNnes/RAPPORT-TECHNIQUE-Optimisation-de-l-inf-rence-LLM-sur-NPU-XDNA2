@@ -452,6 +452,21 @@ ML systems researchers
 
 ## 6. Références
 
+
+https://www.amd.com/fr/technologies/xdna
+
+https://docs.kernel.org/accel/amdxdna/amdnpu.html
+
+https://www.amd.com/en/developer/resources/ryzen-ai-software.html
+
+https://arxiv.org/html/2606.11357v1
+
+https://www.amd.com/en/developer/resources/technical-articles/2026/accelerating-llm-startup-on-amd-ryzen-ai.html
+
+https://github.com/amd/xdna-driver
+
+https://xilinx.github.io/XRT/
+https://arxiv.org/pdf/2512.13282
 - Williams, S. et al. (2009). *Roofline: An insightful visual performance model for floating-point programs and multicore architectures*. SC'09. — Modèle de bottleneck mémoire/compute
 - Dettmers, T. et al. (2022). *LLM.int8(): 8-bit Matrix Multiplication for Transformers at Scale*. NeurIPS'22. — Principe de déquantification pour GEMM
 - Lin, J. et al. (2024). *AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration*. MLSys'24. — Groupwise INT4, sensibilité KV
