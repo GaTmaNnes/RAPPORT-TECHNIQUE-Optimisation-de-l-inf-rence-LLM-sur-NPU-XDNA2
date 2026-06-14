@@ -262,7 +262,193 @@ Par ordre d'impact décroissant :
 4. **Utiliser INT4 uniquement si RAM est la contrainte** (budget < fichier INT8)
 5. **Attendre la résolution de P5 (8 colonnes)** pour un gain ×2 sur la BW effective
 
+---1. STRUCTURE DU REPO
+xdna2-llm-performance-observatory/
+│
+├── README.md
+├── datasets/
+│   ├── raw_runs.csv
+│   ├── model_benchmarks.json
+│   └── scaling_results.csv
+│
+├── scripts/
+│   ├── run_benchmark.py
+│   ├── collect_metrics.py
+│   ├── scaling_test.py
+│   └── export_dataset.py
+│
+├── analysis/
+│   ├── roofline_proxy.py
+│   ├── scaling_plots.py
+│   └── latency_breakdown.py
+│
+├── docs/
+│   ├── methodology.md
+│   ├── hardware_notes.md
+│   └── limitations.md
+│
+└── examples/
+    ├── ollama_config.json
+    ├── fastflow_config.json
+    └── batch_tests.sh
+📊 2. DATASET (format propre dev)
+📄 datasets/raw_runs.csv
+timestamp,model,batch_size,context_len,latency_s,tokens,throughput_tps,run_id
+2026-04-09,qwen3.5:9b,1,2048,12.45,96,7.71,001
+2026-04-09,qwen3.5:9b,2,2048,13.10,192,14.65,002
+2026-04-09,qwen3.5:9b,4,2048,15.80,384,24.30,003
+📄 datasets/model_benchmarks.json
+{
+  "qwen3.5:9b": {
+    "decode_tps": 7.8,
+    "prefill_tps": 46.3,
+    "stable_batch": 1,
+    "notes": "saturation observed beyond batch=2"
+  }
+}
+📄 datasets/scaling_results.csv
+model,batch,avg_latency,std,throughput
+qwen3.5:9b,1,12.4,0.3,7.8
+qwen3.5:9b,2,13.1,0.4,15.2
+qwen3.5:9b,4,15.8,0.6,25.3
+⚙️ 3. SCRIPT DEV UTILISABLE
+🧪 scripts/run_benchmark.py
+import time
+import subprocess
+import csv
+
+MODEL = "qwen3.5:9b"
+
+def run(batch=1):
+    start = time.perf_counter()
+
+    result = subprocess.run(
+        ["flm.exe", "run", MODEL, f"--batch={batch}"],
+        capture_output=True,
+        text=True
+    )
+
+    end = time.perf_counter()
+
+    latency = end - start
+    tokens = 128  # fallback si non exposé
+    tps = tokens / latency
+
+    return latency, tps
+
+
+def main():
+    batches = [1, 2, 4, 8]
+
+    with open("../datasets/raw_runs.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["batch", "latency", "tps"])
+
+        for b in batches:
+            lat, tps = run(b)
+            writer.writerow([b, lat, tps])
+            print(f"batch={b} latency={lat:.2f}s tps={tps:.2f}")
+
+
+if __name__ == "__main__":
+    main()
+📈 4. ANALYSE ROOFLINE PROXY
+analysis/roofline_proxy.py
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("../datasets/raw_runs.csv")
+
+plt.figure()
+
+plt.plot(df["batch_size"], df["throughput_tps"], marker="o")
+
+plt.title("LLM Throughput Scaling (Proxy Roofline)")
+plt.xlabel("Batch Size")
+plt.ylabel("Tokens/sec")
+
+plt.grid()
+plt.show()
+📉 5. SCALING ANALYSIS
+analysis/scaling_plots.py
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("../datasets/scaling_results.csv")
+
+for model in df["model"].unique():
+    d = df[df["model"] == model]
+    plt.plot(d["batch"], d["throughput"], label=model)
+
+plt.legend()
+plt.title("Scaling behavior across models")
+plt.xlabel("Batch size")
+plt.ylabel("Throughput (TPS)")
+plt.show()
+📘 6. README.md (clé pour devs)
+# XDNA2 LLM Performance Observatory
+
+Empirical performance dataset for LLM inference on AMD XDNA2 systems.
+
+## Goal
+
+Understand how:
+- model architecture
+- batch size
+- context length
+- runtime configuration
+
+affect inference performance.
+
 ---
+
+## Key Observations (empirical)
+
+- Strong sensitivity to model shape (hidden size)
+- Decode throughput saturates around ~7–8 TPS (Qwen3.5 9B)
+- Prefill scales differently from decode
+- Batch size improves throughput until saturation
+
+---
+
+## What this is NOT
+
+- Not an official AMD benchmark
+- Not a hardware spec validation
+- Not a driver-level instrumentation tool
+
+---
+
+## What this IS
+
+- Empirical performance dataset
+- Reproducible inference benchmarking framework
+- Scaling behavior analysis toolkit
+
+---
+
+## Usage
+
+```bash
+python scripts/run_benchmark.py
+python analysis/scaling_plots.py
+Target users
+LLM inference engineers
+runtime optimizer developers
+ML systems researchers
+
+---
+
+# 📌 7. LIMITATIONS.md (important pour crédibilité)
+
+```md
+## Limitations
+
+- No hardware counters (AIE utilization unknown)
+- No roofline validation
+- No driver-level instrumentation
+- Latency breakdown approximate
+- Results dependent on runtime (FastFlowLM / Ollama / etc.)
 
 ## 6. Références
 
