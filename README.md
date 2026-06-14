@@ -229,7 +229,7 @@ Ce KV overhead n'est pas comptabilisé dans le plan D2 actuel.
 ---
 
 
-**Conséquence :** `BW_eff` réelle est ~30 GB/s (4 colonnes) vs ~55-60 GB/s théorique (8 colonnes). ( acer nitro 16v ia ) 
+**Conséquence :** `BW_eff` réelle est ~30 GB/s ( vs ~55-60 GB/s théorique (8 colonnes). ( acer nitro 16v ia ) 
 Le tile_util calculé sur 8 colonnes est donc une approximation optimiste.
 
 **Résolution :** paramétrer `XDNA2_COLS_ACTIVE` séparément de `XDNA2_COLS_TOTAL`, et utiliser le premier pour `tile_utilization()`. Valeur correcte : `XDNA2_COLS_ACTIVE = 4` dans la configuration actuelle.
