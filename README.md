@@ -78,7 +78,7 @@ tile_util(h) = floor(h/8 / 256) × 256 / (h/8)
 **Critère de sélection de modèle :** choisir des modèles dont `hidden_size` est un multiple de `8 × 256 = 2048`, ou au moins de `256`. Exemples bons : 2048, 4096. Exemple mauvais : 3584.
 
 ---
-
+cela est conceptuel pas encore tester 
 ### H2 — L'INT4 n'améliore PAS le TPS sur XDNA2 actuel
 
 **Constat naïf :** INT4 = 0.5 bpe → gain TPS théorique × 4 vs BF16.
@@ -141,6 +141,8 @@ Pour `λ > 4.621` : BF16 dominant (conservateur, qualité max)
 | 1.675 | 2    | 258  | 0    | ~3.7         | ~14     | INT8      |
 | 4.621 | 68+  | 190- | 0    | ~5.5         | ~10     | BF16 mix  |
 | 6.000 | 260  | 0    | 0    | ~7.4         | ~7      | BF16      |
+
+pas encore tester sur le xdna2  mais bientot 
 
 La transition INT4→INT8 à λ≈1.675 est confirmée, validant la formulation analytique.
 
@@ -230,7 +232,7 @@ Ce KV overhead n'est pas comptabilisé dans le plan D2 actuel.
 
 **Problème :** empiriquement, seules 4 colonnes sur 8 semblent actives dans les kernels NPU actuels (inféré du ratio BW effective / BW théorique). La raison est une limitation firmware dans le driver.
 
-**Conséquence :** `BW_eff` réelle est ~30 GB/s (4 colonnes) vs ~55-60 GB/s théorique (8 colonnes).  
+**Conséquence :** `BW_eff` réelle est ~30 GB/s (4 colonnes) vs ~55-60 GB/s théorique (8 colonnes). ( acer nitro 16v ia ) 
 Le tile_util calculé sur 8 colonnes est donc une approximation optimiste.
 
 **Résolution :** paramétrer `XDNA2_COLS_ACTIVE` séparément de `XDNA2_COLS_TOTAL`, et utiliser le premier pour `tile_utilization()`. Valeur correcte : `XDNA2_COLS_ACTIVE = 4` dans la configuration actuelle.
@@ -241,20 +243,16 @@ Le tile_util calculé sur 8 colonnes est donc une approximation optimiste.
 
 ### P6 — `--pmode performance` Non Modélisé
 
-**Problème :** le flag `--pmode performance` de `ollama` active le mode performance du NPU (latency-oriented), apportant empiriquement un gain moyen de +35 à +70% TPS (médiane ~+44%) sans modification du modèle.
-
+**P
 Ce gain n'est pas inclus dans le Roofline D2 car il dépend du firmware NPU, pas du plan de quantification.
 
 **Résolution :** exposer un paramètre booléen `pmode_enabled: bool` qui multiplie `TPS_adj` par `PMODE_FACTOR = 1.44`. Permettre à l'utilisateur de le calibrer sur son système.
 
 ---
 
-### P7 — Modèles > 9B (Crash NPU)
+### P7 — Modèles >  (Crash NPU)
 
-**Problème :** les modèles ≥ 20B paramètres causent des crashs NPU (kernel panic / OOM). La limite empirique est ~9B dans les configurations actuelles.
-
-**Résolution dans D2 :** ajouter une garde `if model_params_b > 9.5: warn("Hors limite XDNA2 actuel")`. Ne pas calculer de plan pour ces modèles.
-
+**Problème :** les modèles ≥ 20B paramètres causent des crashs NPU (kernel panic / OOM). 
 ---
 
 ## 5. Recommandations pour l'Optimisation sur XDNA2
@@ -277,3 +275,13 @@ Par ordre d'impact décroissant :
 - AMD (2023). *XDNA2 AIE2 Architecture Whitepaper*. — Tiles, GEMM blocks, SRAM
 - AMD (2024). *Ryzen AI 300 Product Brief*. — BW LPDDR5X théorique
 - Hauswald, J. et al. (2015). *Sirius: An Open End-to-End Voice and Vision Personal Assistant and Its Implications for Future Warehouse Scale Computers*. — Efficacité mémoire des accélérateurs NPU (~50% theoretical BW)
+
+
+
+Casual tinkerer sharing raw field notes — probably full of mistakes
+
+I'm just a curious dev who wanted to understand how the XDNA2 NPU actually behaves when you throw LLMs at it. I ran benchmarks, made guesses, broke things, and learned a bit along the way. This repo is the messy trace of that — not a research paper, not an official guide.
+
+The numbers come from my specific setup only. Some of my conclusions are likely wrong or outdated (especially the 4-column thing — newer work like TileFuse tells a different story). I'm publishing this to share what I found and hopefully get corrected by people who know more.
+
+If you spot something dumb, open an issue. I'd genuinely appreciate it.
