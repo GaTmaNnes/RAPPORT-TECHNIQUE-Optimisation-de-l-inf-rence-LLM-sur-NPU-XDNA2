@@ -229,12 +229,10 @@ Ce KV overhead n'est pas comptabilisé dans le plan D2 actuel.
 ---
 
 
-**Conséquence :** `BW_eff` réelle est ~30 GB/s ( vs ~55-60 GB/s théorique (8 colonnes). ( acer nitro 16v ia ) 
-Le tile_util calculé sur 8 colonnes est donc une approximation optimiste.
+**Conséquence :** `BW_eff` réelle est ~30 GB/s ( vs ~55-60 GB/s théorique  ( acer nitro 16v ia ) 
+
 
 **Résolution :** paramétrer `XDNA2_COLS_ACTIVE` séparément de `XDNA2_COLS_TOTAL`, et utiliser le premier pour `tile_utilization()`. Valeur correcte : `XDNA2_COLS_ACTIVE = 4` dans la configuration actuelle.
-
-**Note :** les 8 colonnes sont disponibles hardware — c'est un problème de driver, résolvable par mise à jour firmware.
 
 ---
 
@@ -260,7 +258,7 @@ Par ordre d'impact décroissant :
 2. **Choisir `hidden_size` multiple de 2048** → éviter la pénalité de tiling (-50%)
 3. **Préférer INT8 à INT4** pour le TPS (G_tps identique, risque qualité réduit ×5)
 4. **Utiliser INT4 uniquement si RAM est la contrainte** (budget < fichier INT8)
-5. **Attendre la résolution de P5 (8 colonnes)** pour un gain ×2 sur la BW effective
+
 
 ---1. STRUCTURE DU REPO
 xdna2-llm-performance-observatory/
